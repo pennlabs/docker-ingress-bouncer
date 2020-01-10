@@ -1,23 +1,22 @@
-# Docker Template
+# Docker Ingress Bouncer
 
-This template repo contains the base configuration needed to publish a docker image.
+[![CircleCI](https://circleci.com/gh/pennlabs/docker-ingress-bouncer.svg?style=shield)](https://circleci.com/gh/pennlabs/docker-ingress-bouncer)
+[![Docker Pulls](https://img.shields.io/docker/pulls/pennlabs/ingress-bouncer)](https://hub.docker.com/r/pennlabs/ingress-bouncer)
 
-## Installation
+This project solves a very specific issue that has to do with moving clusters when you're running a Traefik + Let's Encrypt setup.
 
-Click the green "Use this template" button and make a new repo with your desired name. Run the provided init script `./init.sh <name of image> <name of github repo>` to configure most of the project. See the configuration section for final changes that need to be made.
+## The problem
 
-## Usage
+Imagine you have a DNS entry pointing at your old cluster. When you want to migrate to your new cluster, you first want to fully spin up your new deployment on the new cluster. However, when Traefik tries to do the Let's Encrypt HTTP challenge, it won't be able to because it doesn't have the DNS entry pointed at it. When you move the DNS entry over to your new cluster, now you'll have Traefik serving the default certificate because it was never able to complete the HTTP challenge.
 
-With every commit pushed to master, CircleCI will build a docker image based on the master branch and tag with "latest" and the git commit sha and push that image to Docker Hub.
+## The solution
 
-## Features
+The real solution to this problem is to use DNS challenges, but sometimes your DNS provider has a bad API, forcing you into HTTP challenges.
 
-* CircleCI
-  * Workflow to build and publish your image to Docker Hub using contexts to keep CircleCI credentials safe
-* Docker
-  * .dockerignore file to prevent common unnecessary files from being adding to the docker image
-* MIT License
+This project does the following every 5 minutes:
 
-## Configuration
-
-Add a proper description of your image and usage in README.md
+1. Get your ingress Load Balancer IP
+2. Go through all your ingresses, doing the following
+3. Checks if the host resolves to the LB IP; if not, skips everyting else
+4. Checks if the cert for the host is valid; if it is, skip
+5. Bounces the ingress by deleting and recreating it, triggering Traefik's on host rule
