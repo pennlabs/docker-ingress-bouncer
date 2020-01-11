@@ -6,10 +6,10 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   schedule: {{ .Values.cronjob.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.cronjob.successLimit }}
+  failedJobsHistoryLimit: {{ .Values.cronjob.failureLimit }}
   jobTemplate:
     spec:
-      successfulJobsHistoryLimit: {{ .Values.cronjob.successLimit }}
-      failedJobsHistoryLimit: {{ .Values.cronjob.failureLimit }}
       template:
         spec:
           restartPolicy: Never
