@@ -7,7 +7,6 @@ workflows:
   build-and-publish:
     jobs:
       - docker/publish:
-          name: docker-publish
           cache_from: "pennlabs/ingress-bouncer:latest"
           image: pennlabs/ingress-bouncer
           tag: "${CIRCLE_SHA1},latest"
@@ -22,7 +21,7 @@ workflows:
           chart-path: chart
           context: git-bot
           requires:
-            - docker-publish
+            - docker/publish
           filters:
             branches:
               only:
