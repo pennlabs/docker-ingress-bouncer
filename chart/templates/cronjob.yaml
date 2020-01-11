@@ -5,7 +5,7 @@ metadata:
   name: ingress-bouncer
   namespace: {{ .Release.Namespace }}
 spec:
-  schedule: {{ .Values.cronjob.schedule }}
+  schedule: {{ .Values.cronjob.schedule | quote }}
   jobTemplate:
     spec:
       successfulJobsHistoryLimit: {{ .Values.cronjob.successLimit }}
@@ -20,6 +20,6 @@ spec:
               imagePullPolicy: {{ .Values.image.pullPolicy }}
               env:
                 - name: INGRESS_SVC_NAME
-                  value: "{{ .Values.ingress-svc.name }}"
+                  value: "{{ .Values.ingress_svc.name }}"
                 - name: INGRESS_SVC_NS
-                  value: "{{ .Values.ingress-svc.namespace }}"
+                  value: "{{ .Values.ingress_svc.namespace }}"
