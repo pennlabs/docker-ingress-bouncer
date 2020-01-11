@@ -6,21 +6,21 @@ workflows:
   version: 2
   build-and-publish:
     jobs:
-      - helm-tools/helm-publish:
-          chart-org: pennlabs
-          chart-repo: helm-charts
-          chart-path: chart
-          context: git-bot
-          filters:
-            branches:
-              only:
-                - master
       - docker/publish:
           name: docker-publish
           cache_from: "pennlabs/ingress-bouncer:latest"
           image: pennlabs/ingress-bouncer
           tag: "${CIRCLE_SHA1},latest"
           context: docker-publish
+          filters:
+            branches:
+              only:
+                - master
+      - helm-tools/helm-publish:
+          chart-org: pennlabs
+          chart-repo: helm-charts
+          chart-path: chart
+          context: git-bot
           filters:
             branches:
               only:
