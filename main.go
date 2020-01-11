@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"net"
 	"os"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -33,56 +32,53 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	for {
-		lbsvc, err := clientset.CoreV1().Services(svcNamespace).Get(svcName, metav1.GetOptions{})
-		if err != nil {
-			log.Fatalf("Could not get service %s/%s: %v\n", svcNamespace, svcName, err)
-		}
-		svcType := lbsvc.Spec.Type
-		if svcType != corev1.ServiceTypeLoadBalancer {
-			log.Fatalf("Expected LoadBalancer service type for service %s/%s but got %s.\n", lbsvc.Namespace, lbsvc.Name, svcType)
-		}
-		lbstatus := lbsvc.Status.LoadBalancer.Ingress
-		if len(lbstatus) != 1 {
-			log.Fatalf("Expected exactly one ip for load balancer but got %d.\n", len(lbstatus))
-		}
-		ip := lbstatus[0].IP
-
-		ingresses, err := clientset.ExtensionsV1beta1().Ingresses("").List(metav1.ListOptions{})
-		if err != nil {
-			log.Fatalf("Could not list ingresses: %v\n", err)
-		}
-
-		for _, ingress := range ingresses.Items {
-			bounce := false
-			for _, rule := range ingress.Spec.Rules {
-				host := rule.Host
-
-				if found, err := ipHost(host, ip); err != nil || !found {
-					log.Infof("%s does not resolve to %s.\n", host, ip)
-					continue
-				}
-
-				conn, err := tls.Dial("tcp", host+":443", nil)
-				if err != nil {
-					bounce = true
-					break
-				}
-				conn.Close()
-			}
-			if bounce {
-				err = bounceIngress(ingress, clientset)
-				if err != nil {
-					log.Errorf("Error bouncing ingress %s in namespace %s. Cluster may be in inconsistent state: %v\n", ingress.Name, ingress.Namespace, err)
-				} else {
-					log.Infof("Successfully bounced ingress %s in namespace %s.\n", ingress.Name, ingress.Namespace)
-				}
-			}
-		}
-
-		log.Infof("Sleeping at time %s for 5 minutes\n", time.Now().String())
-		time.Sleep(5 * time.Minute)
+	lbsvc, err := clientset.CoreV1().Services(svcNamespace).Get(svcName, metav1.GetOptions{})
+	if err != nil {
+		log.Fatalf("Could not get service %s/%s: %v\n", svcNamespace, svcName, err)
 	}
+	svcType := lbsvc.Spec.Type
+	if svcType != corev1.ServiceTypeLoadBalancer {
+		log.Fatalf("Expected LoadBalancer service type for service %s/%s but got %s.\n", lbsvc.Namespace, lbsvc.Name, svcType)
+	}
+	lbstatus := lbsvc.Status.LoadBalancer.Ingress
+	if len(lbstatus) != 1 {
+		log.Fatalf("Expected exactly one ip for load balancer but got %d.\n", len(lbstatus))
+	}
+	ip := lbstatus[0].IP
+
+	ingresses, err := clientset.ExtensionsV1beta1().Ingresses("").List(metav1.ListOptions{})
+	if err != nil {
+		log.Fatalf("Could not list ingresses: %v\n", err)
+	}
+
+	for _, ingress := range ingresses.Items {
+		bounce := false
+		for _, rule := range ingress.Spec.Rules {
+			host := rule.Host
+
+			if found, err := ipHost(host, ip); err != nil || !found {
+				log.Infof("%s does not resolve to %s.\n", host, ip)
+				continue
+			}
+
+			conn, err := tls.Dial("tcp", host+":443", nil)
+			if err != nil {
+				bounce = true
+				break
+			}
+			conn.Close()
+		}
+		if bounce {
+			err = bounceIngress(ingress, clientset)
+			if err != nil {
+				log.Errorf("Error bouncing ingress %s in namespace %s. Cluster may be in inconsistent state: %v\n", ingress.Name, ingress.Namespace, err)
+			} else {
+				log.Infof("Successfully bounced ingress %s in namespace %s.\n", ingress.Name, ingress.Namespace)
+			}
+		}
+	}
+
+	log.Infof("Bouncing completed 💯")
 }
 
 func ipHost(host, desiredIP string) (bool, error) {

@@ -1,0 +1,25 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: ingress-bouncer
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: {{ .Values.cronjob.schedule }}
+  jobTemplate:
+    spec:
+      successfulJobsHistoryLimit: {{ .Values.cronjob.successLimit }}
+      failedJobsHistoryLimit: {{ .Values.cronjob.failureLimit }}
+      template:
+        spec:
+          restartPolicy: Never
+          serviceAccountName: ingress-bouncer
+          containers:
+            - name: bouncer
+              image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              env:
+                - name: INGRESS_SVC_NAME
+                  value: "{{ .Values.ingress-svc.name }}"
+                - name: INGRESS_SVC_NS
+                  value: "{{ .Values.ingress-svc.namespace }}"
