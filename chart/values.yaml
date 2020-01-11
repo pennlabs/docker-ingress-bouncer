@@ -1,4 +1,4 @@
-ingress-svc:
+ingress_svc:
   name: traefik-ingress-service
   namespace: kube-system
 
