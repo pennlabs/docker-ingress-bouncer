@@ -4,7 +4,7 @@ ingress_svc:
 
 image:
   repository: pennlabs/ingress-bouncer
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   tag: latest
 
 cronjob:
