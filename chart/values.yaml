@@ -1,0 +1,13 @@
+ingress-svc:
+  name: traefik-ingress-service
+  namespace: kube-system
+
+image:
+  repository: pennlabs/ingress-bouncer
+  pullPolicy: IfNotPresent
+  tag: latest
+
+cronjob:
+  schedule: "*/5 * * * *"
+  successLimit: 1
+  failureLimit: 1
