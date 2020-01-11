@@ -1,6 +1,6 @@
 # Docker Ingress Bouncer
 
-[![CircleCI](https://circleci.com/gh/pennlabs/docker-ingress-bouncer.svg?style=shield)](https://circleci.com/gh/pennlabs/docker-ingress-bouncer)
+[![CircleCI](https://circleci.com/gh/pennlabs/ingress-bouncer.svg?style=shield)](https://circleci.com/gh/pennlabs/ingress-bouncer)
 [![Docker Pulls](https://img.shields.io/docker/pulls/pennlabs/ingress-bouncer)](https://hub.docker.com/r/pennlabs/ingress-bouncer)
 
 This project solves a very specific issue that has to do with moving clusters when you're running a Traefik + Let's Encrypt setup.
