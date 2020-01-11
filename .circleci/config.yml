@@ -21,6 +21,8 @@ workflows:
           chart-repo: helm-charts
           chart-path: chart
           context: git-bot
+          requires:
+            - docker-publish
           filters:
             branches:
               only:
