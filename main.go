@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"net"
 	"os"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -108,6 +109,8 @@ func bounceIngress(ingress v1beta1.Ingress, clientset *kubernetes.Clientset) err
 	ingress.Generation = 0
 	ingress.CreationTimestamp = metav1.Time{}
 	ingress.Status = v1beta1.IngressStatus{}
+
+	time.Sleep(20 * time.Second)
 
 	_, err = clientset.ExtensionsV1beta1().Ingresses(ingress.Namespace).Create(&ingress)
 	if err != nil {
