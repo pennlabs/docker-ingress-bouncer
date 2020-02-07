@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"net"
 	"os"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -61,12 +62,18 @@ func main() {
 				continue
 			}
 
-			conn, err := tls.Dial("tcp", host+":443", nil)
-			if err != nil {
-				bounce = true
+			// try to connect 10 times to ensure we hit all traefik instances
+			for i := 0; i < 10; i++ {
+				conn, err := tls.Dial("tcp", host+":443", nil)
+				if err != nil {
+					bounce = true
+					break
+				}
+				conn.Close()
+			}
+			if bounce {
 				break
 			}
-			conn.Close()
 		}
 		if bounce {
 			err = bounceIngress(ingress, clientset)
@@ -108,6 +115,8 @@ func bounceIngress(ingress v1beta1.Ingress, clientset *kubernetes.Clientset) err
 	ingress.Generation = 0
 	ingress.CreationTimestamp = metav1.Time{}
 	ingress.Status = v1beta1.IngressStatus{}
+
+	time.Sleep(20 * time.Second)
 
 	_, err = clientset.ExtensionsV1beta1().Ingresses(ingress.Namespace).Create(&ingress)
 	if err != nil {
