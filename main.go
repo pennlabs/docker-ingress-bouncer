@@ -62,12 +62,18 @@ func main() {
 				continue
 			}
 
-			conn, err := tls.Dial("tcp", host+":443", nil)
-			if err != nil {
-				bounce = true
+			// try to connect 10 times to ensure we hit all traefik instances
+			for i := 0; i < 10; i++ {
+				conn, err := tls.Dial("tcp", host+":443", nil)
+				if err != nil {
+					bounce = true
+					break
+				}
+				conn.Close()
+			}
+			if bounce {
 				break
 			}
-			conn.Close()
 		}
 		if bounce {
 			err = bounceIngress(ingress, clientset)
